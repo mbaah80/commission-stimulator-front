@@ -14,11 +14,13 @@ import {
     Form,
     FormLayout,
     DatePicker,
-    AppProvider
+    AppProvider, IndexFilters, useBreakpoints
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 import React, {useCallback, useEffect, useState} from 'react';
 import {baseUrl} from '../../../utils/baseUrl';
+
+import '../../css/modify.css'
 
 export const Index = () => {
     const [products, setProducts] = useState([]);
@@ -27,24 +29,24 @@ export const Index = () => {
     const [sortDirection, setSortDirection] = useState('ascending');
     const [staffMember, setStaffMember] = useState('');
     const [date, setDate] = useState('');
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
     const [result, setResult] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [modal, setModal] = useState(false);
+    const [applyCommissionAll, setApplyCommissionAll] = useState(0);
 
 
-
+    const fetchProducts = async () => {
+        try {
+            const response = await fetch(`${baseUrl}/products`);
+            const data = await response.json();
+            setProducts(data);
+        } catch (error) {
+            console.error('Error fetching products', error);
+        }
+    };
     useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const response = await fetch(`${baseUrl}/products`);
-                const data = await response.json();
-                setProducts(data);
-            } catch (error) {
-                console.error('Error fetching products', error);
-            }
-        };
         fetchProducts();
 
     }, []);
@@ -56,18 +58,14 @@ export const Index = () => {
     };
 
     const {selectedResources, allResourcesSelected, handleSelectionChange} =
-        useIndexResourceState(products,{
-            resourceName,
-            idForItem: (product) => product._id,
-            idAttribute: '_id',
+        useIndexResourceState(products);
 
-    });
 
     const handleBulkActionCommission = async() => {
         try {
             const selectedProductIds = selectedResources;
             const data = {
-                commissionPercentage: commission,
+                commissionPercentage: commission || applyCommissionAll,
                 productIds: selectedProductIds
             };
 
@@ -79,7 +77,12 @@ export const Index = () => {
                 , body: JSON.stringify(data)
             })
                 .then(response => response.json())
-                .then(data => {})
+                .then(data => {
+                    setModal(false);
+                    setApplyCommissionAll('');
+                    handleSelectionChange([]);
+                    fetchProducts();
+                })
                 .catch(error => {})
         } catch (error) {
 
@@ -109,6 +112,8 @@ export const Index = () => {
                 .then(data => {
                     setResult(data);
                     setLoading(false);
+                    handleSelectionChange([]);
+                    fetchProducts();
                 })
                 .catch(error => {
                     setLoading(false);
@@ -136,6 +141,9 @@ export const Index = () => {
             })
                 .then(response => response.json())
                 .then(data => {
+                    setModal(false);
+                    setApplyCommissionAll('');
+                    handleSelectionChange([]);
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -158,7 +166,10 @@ export const Index = () => {
         });
     };
 
-    const rowMarkup = products.map((product) => {
+
+    const handleToggle = useCallback(() => setOpen((open) => !open), []);
+
+    const rowMarkup = products.map((product, index) => {
         const {
             _id,
             name,
@@ -172,31 +183,43 @@ export const Index = () => {
                 id={_id}
                 key={_id}
                 selected={selectedResources.includes(_id)}
-                position={_id}
+                position={index}
             >
                 <IndexTable.Cell>
-                    <Text>{name}</Text>
+                    <Text as="span">{name}</Text>
                 </IndexTable.Cell>
                 <IndexTable.Cell>
-                    <Text>{category}</Text>
+                    <Text as="span">{category}</Text>
                 </IndexTable.Cell>
                 <IndexTable.Cell>
-                    <Text>{price}</Text>
+                    <Text as="span">{price}</Text>
                 </IndexTable.Cell>
                 <IndexTable.Cell>
-                    <TextField
-                        type="number"
-                        value={commissionPercentage}
-                        onChange={(value) => handleCommissionChange(_id, value)}
-                        autoComplete="off"
-                    />
+                   <div
+                         className="flex"
+                   >
+                       <span className="w-5 mr-10">
+                           <TextField
+                           className="width-50"
+                           placeholder="%"
+                           disabled
+                       />
+                       </span>
+                       <span
+                            className="w-10"
+                       >
+                           <TextField
+                               type="number"
+                               value={commissionPercentage}
+                               onChange={(value) => handleCommissionChange(_id, value)}
+                               autoComplete="off"
+                           />
+                       </span>
+                   </div>
                 </IndexTable.Cell>
             </IndexTable.Row>
         );
     });
-
-
-    const handleToggle = useCallback(() => setOpen((open) => !open), []);
 
     const handleSubmit = () => {}
 
@@ -212,8 +235,36 @@ export const Index = () => {
                 </Button>
                 {
                     result && ( <TextContainer> <Text >
-                        Total commission: {result.totalCommission} - {result.staffMember}
+                        Total commission Base on Orders: {result.totalCommission} - {result.staffMember}
                     </Text> </TextContainer>)
+                }
+                {
+                    result && result.length > 0 && (
+                        <Text >
+                            Orders for {result.staffMember} From Date range
+                            {
+                                result.orders.map((order, index) => {
+                                    return (
+                                        <div key={index}>
+                                            {
+                                                order.products.map((product, index) => {
+                                                    return (
+                                                        <div key={index}>
+                                                            <TextContainer>
+                                                                <Text>
+                                                                 Product   {product.name} - Price {product.price} - Commission Percentage {product.commissionPercentage} - Commission {product.commission}
+                                                                </Text>
+                                                            </TextContainer>
+                                                        </div>
+                                                    )
+                                                })
+                                            }
+                                        </div>
+                                    )
+                                })
+                        }
+                        </Text>
+                    )
                 }
                 <Collapsible
                     open={open}
@@ -235,6 +286,7 @@ export const Index = () => {
                                 onChange={(value) => setDate(value)}
                                 selected={date}
                                 onMonthChange={(month, year) => console.log(month, year)}
+
                             />
                             <Button onClick={filterOrderByCommissionHandler}>
                                 {
@@ -246,7 +298,51 @@ export const Index = () => {
                 </Collapsible>
             </LegacyStack>
             <LegacyCard>
+                <IndexFilters
+                    sortOptions={
+                        [
+                            {label: 'Commission', value: 'commission'},
+                            {label: 'Price', value: 'price'},
+                            {label: 'Name', value: 'name'},
+                            {label: 'Category', value: 'category'}
+                        ]
+                    }
+                    queryPlaceholder="Searching in all"
+                    tabs={
+                        [
+                            {
+                                id: 'all-products',
+                                content: 'All',
+                                accessibilityLabel: 'All products',
+                                filter: {
+                                    sortKey: sortBy,
+                                    sortDir: sortDirection,
+                                },
+                            },
+                        ]
+                    }
+                />
+                {
+                    selectedResources.length > 0 && (
+                        <div className="flex-end mt-10 mb-10">
+                             <span className="w-5 mr-10">
+                           <TextField
+                               className="width-50"
+                               placeholder="%"
+                               disabled
+                           />
+                       </span>
+                            <TextField
+                                className="width-50"
+                                placeholder="%"
+                                value={applyCommissionAll}
+                                onChange={(value) => setApplyCommissionAll(value)}
+                            />
+                        </div>
+                    )
+                }
                 <IndexTable
+                    condensed={useBreakpoints().smDown}
                     resourceName={resourceName}
                     itemCount={products.length}
                     selectedItemsCount={
@@ -260,11 +356,8 @@ export const Index = () => {
                         {title: ''},
                     ]}
                     pagination={{
-                        hasPrevious: false,
                         hasNext: true,
-                        onNext: () => {
-                            console.log('Next');
-                        },
+                        product: 'products',
                     }}
                     sort={{
                         value: sortBy,
@@ -274,9 +367,10 @@ export const Index = () => {
                         setSortBy(selectedColumnId);
                         setSortDirection(sortDirection);
                     }}
+                    sortable={['name', 'category', 'price']}
                     bulkActions={[
                         {
-                            content: 'Add commission',
+                            content: 'Apply to selected products',
                             onAction: () => handleBulkActionCommission(),
                         },
                         {
@@ -288,7 +382,6 @@ export const Index = () => {
                             onAction: () => staffOrderHandler(),
                         }
                     ]}
-
                 >
                     {rowMarkup}
                 </IndexTable>
