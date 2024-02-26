@@ -13,10 +13,6 @@ import {
     TextContainer,
     Form,
     FormLayout,
-    Popover,
-    Box,
-    Select,
-    InlineStack,
     DatePicker, Icon
 } from '@shopify/polaris';
 import React, {useCallback, useEffect, useState} from 'react';
@@ -37,7 +33,6 @@ const options = {
 export const Index = () => {
     const [products, setProducts] = useState([]);
     const [commission, setCommission] = useState(0);
-    const [filterCategory, setFilterCategory] = useState('');
     const [sortBy, setSortBy] = useState('name');
     const [sortDirection, setSortDirection] = useState('ascending');
     const [staffMember, setStaffMember] = useState('');
@@ -80,8 +75,6 @@ export const Index = () => {
     const handleBulkActionCommission = async() => {
         try {
             const selectedProductIds = selectedResources;
-            console.log('selectedProductIds', selectedProductIds);
-
             const data = {
                 commissionPercentage: commission,
                 productIds: selectedProductIds
@@ -104,8 +97,12 @@ export const Index = () => {
 
     const filterOrderByCommissionHandler = async () => {
         try {
+            console.log('sortBy', sortBy);
             setLoading(true);
-            //format date base on this 2024-02-26T10:31:04.421+00:00
+            if (date === '') {
+                setLoading(false);
+                alert('Please select a date');
+            }
             const data = {
                 staffMember: staffMember,
                 startDate: new Date(date.start).toISOString(),
@@ -120,19 +117,43 @@ export const Index = () => {
             })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Success:', data);
                     setResult(data);
                     setLoading(false);
                 })
                 .catch(error => {
-                    console.error('Error:', error);
                     setLoading(false);
                 })
         } catch (error) {
-            console.error('Error fetching products', error);
             setLoading(false);
         }
     }
+
+    const staffOrderHandler =  async() => {
+        try {
+            const selectedProductIds = selectedResources;
+            const data = {
+                staffMember: staffMember,
+                products: selectedProductIds
+            };
+
+            fetch(`${baseUrl}/orders`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+                , body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                })
+        } catch (error) {
+            console.error('Error fetching products', error);
+        }
+    };
 
     const handleCommissionChange = (productId, value) => {
         // Update the state with the new commission value for the specific product
@@ -204,7 +225,6 @@ export const Index = () => {
 
     return (
         <>
-
             <LegacyStack vertical>
                 <Button
                     onClick={handleToggle}
@@ -248,7 +268,7 @@ export const Index = () => {
                     </Form>
                 </Collapsible>
             </LegacyStack>
-            <LegacyCard style={{marginTop: '20px'}}>
+            <LegacyCard>
                 <IndexTable
                     resourceName={resourceName}
                     itemCount={products.length}
@@ -281,8 +301,17 @@ export const Index = () => {
                         {
                             content: 'Add commission',
                             onAction: () => handleBulkActionCommission(),
+                        },
+                        {
+                            content: 'Remove commission',
+                            onAction: () => console.log('Remove commission'),
+                        },
+                        {
+                            content: 'Add staff order',
+                            onAction: () => staffOrderHandler(),
                         }
                     ]}
+
                 >
                     {rowMarkup}
                 </IndexTable>
