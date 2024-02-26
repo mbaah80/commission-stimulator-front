@@ -13,12 +13,12 @@ import {
     TextContainer,
     Form,
     FormLayout,
-    DatePicker, Icon
+    DatePicker,
+    AppProvider
 } from '@shopify/polaris';
+import enTranslations from '@shopify/polaris/locales/en.json';
 import React, {useCallback, useEffect, useState} from 'react';
-import Filter from '../../components/filter/Index';
 import {baseUrl} from '../../../utils/baseUrl';
-import {ArrowRightMinor} from "@shopify/polaris-icons";
 
 export const Index = () => {
     const [products, setProducts] = useState([]);
@@ -198,20 +198,10 @@ export const Index = () => {
 
     const handleToggle = useCallback(() => setOpen((open) => !open), []);
 
-    const handleApply = () => {
-        // Implement logic for applying date range
-        setPopoverActive(false);
-    };
-
-    const handleCancel = () => {
-        // Implement logic for canceling date range selection
-        setPopoverActive(false);
-    };
-
     const handleSubmit = () => {}
 
     return (
-        <>
+        <AppProvider i18n={enTranslations}>
             <LegacyStack vertical>
                 <Button
                     onClick={handleToggle}
@@ -303,7 +293,7 @@ export const Index = () => {
                     {rowMarkup}
                 </IndexTable>
             </LegacyCard>
-        </>
+        </AppProvider>
     )
 }
 
