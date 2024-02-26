@@ -44,6 +44,7 @@ export const Index = () => {
     const [date, setDate] = useState('');
     const [open, setOpen] = useState(true);
     const [result, setResult] = useState('');
+    const [loading, setLoading] = useState(false);
 
 
 
@@ -103,6 +104,7 @@ export const Index = () => {
 
     const filterOrderByCommissionHandler = async () => {
         try {
+            setLoading(true);
             //format date base on this 2024-02-26T10:31:04.421+00:00
             const data = {
                 staffMember: staffMember,
@@ -120,12 +122,15 @@ export const Index = () => {
                 .then(data => {
                     console.log('Success:', data);
                     setResult(data);
+                    setLoading(false);
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    setLoading(false);
                 })
         } catch (error) {
             console.error('Error fetching products', error);
+            setLoading(false);
         }
     }
 
@@ -235,7 +240,9 @@ export const Index = () => {
                                 onMonthChange={(month, year) => console.log(month, year)}
                             />
                             <Button onClick={filterOrderByCommissionHandler}>
-                                Apply filter
+                                {
+                                    loading ? 'Loading...' : 'Apply filter'
+                                }
                             </Button>
                         </FormLayout>
                     </Form>
