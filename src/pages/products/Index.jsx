@@ -20,16 +20,6 @@ import Filter from '../../components/filter/Index';
 import {baseUrl} from '../../../utils/baseUrl';
 import {ArrowRightMinor} from "@shopify/polaris-icons";
 
-const options = {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-    timeZoneName: 'short'
-};
 export const Index = () => {
     const [products, setProducts] = useState([]);
     const [commission, setCommission] = useState(0);
@@ -39,7 +29,9 @@ export const Index = () => {
     const [date, setDate] = useState('');
     const [open, setOpen] = useState(true);
     const [result, setResult] = useState('');
+    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [modal, setModal] = useState(false);
 
 
 
@@ -48,7 +40,6 @@ export const Index = () => {
             try {
                 const response = await fetch(`${baseUrl}/products`);
                 const data = await response.json();
-                console.log('data', data);
                 setProducts(data);
             } catch (error) {
                 console.error('Error fetching products', error);
@@ -97,7 +88,6 @@ export const Index = () => {
 
     const filterOrderByCommissionHandler = async () => {
         try {
-            console.log('sortBy', sortBy);
             setLoading(true);
             if (date === '') {
                 setLoading(false);
@@ -122,6 +112,7 @@ export const Index = () => {
                 })
                 .catch(error => {
                     setLoading(false);
+                    setError(error.message);
                 })
         } catch (error) {
             setLoading(false);
@@ -145,7 +136,6 @@ export const Index = () => {
             })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Success:', data);
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -157,9 +147,6 @@ export const Index = () => {
 
     const handleCommissionChange = (productId, value) => {
         // Update the state with the new commission value for the specific product
-
-        console.log('productId', productId);
-        console.log('value', value);
         setProducts(prevProducts => {
             return prevProducts.map(product => {
                 if (product._id === productId) {
@@ -235,7 +222,7 @@ export const Index = () => {
                 </Button>
                 {
                     result && ( <TextContainer> <Text >
-                        Total commission: {result.totalCommission} - {staffMember}
+                        Total commission: {result.totalCommission} - {result.staffMember}
                     </Text> </TextContainer>)
                 }
                 <Collapsible
