@@ -56,7 +56,7 @@ export const Index = () => {
 
     const filterProductsData = useMemo(() => {
         return products.filter((product) => {
-            return filterProducts.length === 0 || filterProducts.includes(product.name);
+            return filterProducts ? product.name.toLowerCase().includes(filterProducts.toLowerCase()) : true;
         });
     }, [filterProducts, products]);
 
