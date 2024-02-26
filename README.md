@@ -1,24 +1,41 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Frontend README
+
+This project is a commission plan simulator built using [Next.js](https://nextjs.org/) and [Shopify Polaris](https://polaris.shopify.com/) for the UI components.
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+    ```bash
+    git clone https://github.com/mbaah80/commission-stimulator-front.git
+    ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Navigate to the frontend directory:
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+    ```bash
+    cd frontend
+    ```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+3. Install dependencies:
+
+    ```bash
+    npm install
+    ```
+
+4. Run the development server:
+
+    ```bash
+    npm run dev
+    ```
+
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
+
+- **Commission Plan Configuration**: Set commission percentages for each product.
+- **Filtering and Sorting**: Filter and sort products based on various criteria.
+- **Bulk Actions**: Apply a specific commission percentage to multiple products at once.
+- **Commission Calculation**: Calculate total commissions for a specific date range and staff member.
+- **Interactive UI**: User-friendly interface with interactive components.
 
 ## Learn More
 
