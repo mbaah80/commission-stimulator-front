@@ -17,7 +17,7 @@ import {
     AppProvider, IndexFilters, useBreakpoints
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {baseUrl} from '../../../utils/baseUrl';
 
 import '../../css/modify.css'
@@ -35,6 +35,7 @@ export const Index = () => {
     const [loading, setLoading] = useState(false);
     const [modal, setModal] = useState(false);
     const [applyCommissionAll, setApplyCommissionAll] = useState(0);
+    const [filterProducts, setFilterProducts] = useState('');
 
 
     const fetchProducts = async () => {
@@ -48,8 +49,16 @@ export const Index = () => {
     };
     useEffect(() => {
         fetchProducts();
-
     }, []);
+
+    //filter products by  filterProducts use useMemo
+
+
+    const filterProductsData = useMemo(() => {
+        return products.filter((product) => {
+            return filterProducts.length === 0 || filterProducts.includes(product.name);
+        });
+    }, [filterProducts, products]);
 
 
     const resourceName = {
@@ -169,7 +178,7 @@ export const Index = () => {
 
     const handleToggle = useCallback(() => setOpen((open) => !open), []);
 
-    const rowMarkup = products.map((product, index) => {
+    const rowMarkup = filterProductsData.map((product, index) => {
         const {
             _id,
             name,
@@ -325,13 +334,21 @@ export const Index = () => {
                 {
                     selectedResources.length > 0 && (
                         <div className="flex-end mt-10 mb-10">
-                             <span className="w-5 mr-10">
-                           <TextField
-                               className="width-50"
-                               placeholder="%"
-                               disabled
-                           />
-                       </span>
+                            <span className="mr-10">
+                                <TextField
+                                    className="width-50"
+                                    placeholder="Filter by name"
+                                    value={filterProducts}
+                                    onChange={(value) => setFilterProducts(value)}
+                                />
+                            </span>
+                             <span className="w-5 mr-10 ">
+                                   <TextField
+                                       className="width-50"
+                                       placeholder="%"
+                                       disabled
+                                   />
+                               </span>
                             <TextField
                                 className="width-50"
                                 placeholder="%"
