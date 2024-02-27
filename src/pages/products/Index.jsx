@@ -20,6 +20,7 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {baseUrl} from '../../../utils/baseUrl';
 import  Filter  from '../../components/filter/Index';
 import Modal from '../../components/modal/Index';
+import Order from '../../components/order/Index';
 
 import '../../css/modify.css'
 
@@ -417,33 +418,31 @@ export const Index = () => {
                 </div>
                 {
                     result && ( <TextContainer> <Text >
-                        Total commission Base on Orders: {result.totalCommission} - {result.staffMember}
+                        Total commission Base on Orders: {result.totalCommission}
                     </Text> </TextContainer>)
                 }
                 {
                     result && result?.orders?.length > 0 && (
-                        <span
-                        >
-                            Orders for {result.staffMember} From Date range
+                        <span>
+                            Orders for {result.staffMember}  |  Total: {result.orders.length}
                             {
                                 result.orders.map((order, index) => {
                                     return (
-                                        <div key={index}>
+                                        <div key={`${order.orderId}-${index}`}>
                                             {
                                                 order.products.map((product, index) => {
                                                     return (
-                                                        <div key={product._id}>
-                                                            <Text as="span">
-                                                                Product   {product.name} - Price {product.price} - Commission Percentage {product.commissionPercentage} - Earning {product.commission}
-                                                            </Text>
-                                                        </div>
+                                                        <Order
+                                                            product={product}
+                                                            key={`${product.productId}-${index}`}
+                                                        />
                                                     )
                                                 })
                                             }
                                         </div>
                                     )
                                 })
-                        }
+                           }
                         </span>
                     )
                 }
