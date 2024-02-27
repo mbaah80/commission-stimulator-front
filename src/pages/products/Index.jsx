@@ -21,6 +21,7 @@ import {baseUrl} from '../../../utils/baseUrl';
 import  Filter  from '../../components/filter/Index';
 import Modal from '../../components/modal/Index';
 import Order from '../../components/order/Index';
+import Table from '../../components/table/Index';
 
 import '../../css/modify.css'
 
@@ -38,6 +39,7 @@ export const Index = () => {
     const [queryValue, setQueryValue] = useState('');
     const [active, setActive] = useState(false);
     const [orders, setOrders] = useState([]);
+    const [commissionPercentage, setCommissionPercentage] = useState('');
 
 
 
@@ -193,10 +195,9 @@ export const Index = () => {
     };
 
     const handleCommissionChange = (productId, value) => {
-        // Update the state with the new commission value for the specific product
         setProducts(prevProducts => {
             return prevProducts.map(product => {
-                if (product._id === productId) {
+                if (product.id === productId) {
                     setCommission(value);
                     return { ...product, commissionPercentage: value };
                 }
@@ -204,6 +205,7 @@ export const Index = () => {
             });
         });
     };
+
 
 
     const handleToggle = useCallback(() => setOpen((open) => !open), []);
@@ -317,14 +319,6 @@ export const Index = () => {
     ];
 
     const appliedFilters = [];
-    if (accountStatus && !isEmpty(accountStatus)) {
-        const key = 'accountStatus';
-        appliedFilters.push({
-            key,
-            label: disambiguateLabel(key, accountStatus),
-            onRemove: handleAccountStatusRemove,
-        });
-    }
     if (moneySpent) {
         const key = 'moneySpent';
         appliedFilters.push({
@@ -333,16 +327,6 @@ export const Index = () => {
             onRemove: handleMoneySpentRemove,
         });
     }
-    if (!isEmpty(taggedWith)) {
-        const key = 'taggedWith';
-        appliedFilters.push({
-            key,
-            label: disambiguateLabel(key, taggedWith),
-            onRemove: handleTaggedWithRemove,
-        });
-    }
-
-
 
     const rowMarkup = filterProductsData.map(
         (
@@ -378,12 +362,12 @@ export const Index = () => {
                         <span
                             className="w-10"
                         >
-                           <TextField
-                               type="number"
-                               value={commissionPercentage}
-                               onChange={(value) => handleCommissionChange(id, value)}
-                               autoComplete="off"
-                           />
+                            <TextField
+                                type="number"
+                                value={commissionPercentage}
+                                onChange={(value) => handleCommissionChange(id, value)}
+                                autoComplete="off"
+                            />
                        </span>
                     </div>
                 </IndexTable.Cell>
@@ -525,27 +509,26 @@ export const Index = () => {
                                     canCreateNewView
                                     onCreateNewView={onCreateNewView}
                                     filters={filters}
-                                    appliedFilters={appliedFilters}
                                     onClearAll={handleFiltersClearAll}
                                     mode={mode}
                                     setMode={setMode}
                                 />
-                                <IndexTable
-                                    resourceName={resourceName}
-                                    itemCount={filterProductsData.length}
-                                    selectedItemsCount={
-                                        allResourcesSelected ? 'All' : selectedResources.length
-                                    }
+                                <Table
+                                    selectedRows={selectedResources}
                                     onSelectionChange={handleSelectionChange}
                                     headings={[
-                                        {title: 'Name'},
-                                        {title: 'Category'},
-                                        {title: 'Price'},
-                                        {title: ''},
+                                        'Product',
+                                        'Category',
+                                        'Price',
+                                        'Commission %'
                                     ]}
-                                >
-                                    {rowMarkup}
-                                </IndexTable>
+                                    products={filterProductsData}
+                                    selectedResources={selectedResources}
+                                    resourceName={resourceName}
+                                    itemCount={filterProductsData.length}
+                                    filterProductsData={filterProductsData}
+                                    rowMarkup={rowMarkup}
+                                />
                             </div>
                         </div>
                 ) : (
@@ -554,27 +537,6 @@ export const Index = () => {
             </LegacyCard>
         </AppProvider>
     )
-
-    function disambiguateLabel(key, value) {
-        switch (key) {
-            case 'moneySpent':
-                return `Money spent is between $${value[0]} and $${value[1]}`;
-            case 'taggedWith':
-                return `Tagged with ${value}`;
-            case 'accountStatus':
-                return value.map((val) => `Customer ${val}`).join(', ');
-            default:
-                return value;
-        }
-    }
-
-    function isEmpty(value) {
-        if (Array.isArray(value)) {
-            return value.length === 0;
-        } else {
-            return value === '' || value == null;
-        }
-    }
 
 }
 
