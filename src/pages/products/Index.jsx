@@ -234,6 +234,7 @@ export const Index = () => {
                     setPrice('');
                     setCommissionPercentage('');
                     setProductModal(false);
+                    fetchProducts();
                     setTimeout(() => {
                         alert(data.message)
                     },1000)
