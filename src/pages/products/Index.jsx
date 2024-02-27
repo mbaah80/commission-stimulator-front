@@ -550,7 +550,7 @@ export const Index = () => {
                             </div>
                         </div>
                 ) : (
-                    <p className="flex mt-10 mb-10">Loading products...</p>
+                    <p className="flex-center mt-10 mb-10">Loading products...</p>
                 )}
             </LegacyCard>
         </AppProvider>
