@@ -335,7 +335,7 @@ export const Index = () => {
                     <Text as="span">{category}</Text>
                 </IndexTable.Cell>
                 <IndexTable.Cell>
-                    <Text as="span">{price}</Text>
+                    <Text as="span">$ {price}</Text>
                 </IndexTable.Cell>
                 <IndexTable.Cell>
                     <div
