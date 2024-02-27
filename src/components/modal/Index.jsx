@@ -1,7 +1,7 @@
 import {Button, Frame, Modal, TextContainer, TextField} from '@shopify/polaris';
 import {useState, useCallback} from 'react';
 
-export const  Index = ({active,setActive, staffMember, setStaffMember, staffOrderHandler }) => {
+export const  Index = ({active,setActive, actionHandler, children, title, content }) => {
 
    const closedModal = useCallback(() => setActive(false), [setActive]);
 
@@ -10,19 +10,14 @@ export const  Index = ({active,setActive, staffMember, setStaffMember, staffOrde
             <Modal
                 open={active}
                 onClose={closedModal}
-                title="staff Member"
+                title={title}
                 primaryAction={{
-                    content: 'Save Order',
-                    onAction: staffOrderHandler,
+                    content: content,
+                    onAction: actionHandler,
                 }}
             >
                 <Modal.Section>
-                    <TextField
-                        label="Staff name"
-                               value={staffMember}
-                                 onChange={(value) => setStaffMember(value)}
-                     autoComplete="off"
-                    />
+                    {children}
                 </Modal.Section>
             </Modal>
         </div>

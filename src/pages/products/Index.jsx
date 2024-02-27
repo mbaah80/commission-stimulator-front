@@ -38,7 +38,12 @@ export const Index = () => {
     const [filterProducts, setFilterProducts] = useState('');
     const [queryValue, setQueryValue] = useState('');
     const [active, setActive] = useState(false);
+    const [productModal, setProductModal] = useState(false);
     const [orders, setOrders] = useState([]);
+    const [name, setName] = useState('');
+    const [category, setCategory] = useState('');
+    const [price, setPrice] = useState('');
+    const [commissionPercentage, setCommissionPercentage] = useState('');
 
 
 
@@ -202,6 +207,43 @@ export const Index = () => {
                 return product;
             });
         });
+    };
+
+    const addProductHandler =  async() => {
+        try {
+
+            const data = {
+                name: name,
+                category: category,
+                price: price,
+                commissionPercentage: commissionPercentage
+            };
+
+            fetch(`${baseUrl}/products`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+                , body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    setActive(false);
+                    setName('');
+                    setCategory('');
+                    setPrice('');
+                    setCommissionPercentage('');
+                    setProductModal(false);
+                    setTimeout(() => {
+                        alert(data.message)
+                    },1000)
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                })
+        } catch (error) {
+            console.error('Error fetching products', error);
+        }
     };
 
 
@@ -368,12 +410,57 @@ export const Index = () => {
     return (
         <AppProvider i18n={enTranslations}>
           <Modal
+              title="Add Staff Order"
+              content="Save"
               active={active}
               setActive={setActive}
-              staffOrderHandler={staffOrderHandler}
+              actionHandler={staffOrderHandler}
               staffMember={staffMember}
               setStaffMember={setStaffMember}
+              children={
+                  <TextField
+                      label="Staff name"
+                      value={staffMember}
+                      onChange={(value) => setStaffMember(value)}
+                      autoComplete="off"
+                  />
+              }
           />
+            <Modal
+                title="Add Product"
+                content="Save Product"
+                active={productModal}
+                setActive={setProductModal}
+                actionHandler={addProductHandler}
+                children={
+                    <div>
+                        <div className="mb-10">
+                            <TextField
+                                label="Product name"
+                                value={name}
+                                onChange={(value) => setName(value)}
+                                autoComplete="off"
+                            />
+                        </div>
+                        <div className="mb-10">
+                            <TextField
+                                label="category"
+                                value={category}
+                                onChange={(value) => setCategory(value)}
+                                autoComplete="off"
+                            />
+                        </div>
+                        <div className="mb-10">
+                            <TextField
+                                label="price"
+                                value={price}
+                                onChange={(value) => setPrice(value)}
+                                autoComplete="off"
+                            />
+                        </div>
+                    </div>
+                }
+            />
             <LegacyStack vertical>
                 <div className="flex">
                    <div className="mr-10">
@@ -474,9 +561,16 @@ export const Index = () => {
                                             Apply to selected products
                                         </Button>
                                         </span>
-                                <Button variant="secondary" onClick={()=>setActive(true)}>
+                                <span className="mr-10">
+                                    <Button variant="secondary" onClick={()=>setActive(true)}>
                                     simulate
                                 </Button>
+                                </span>
+                                <span>
+                                    <Button variant="secondary" onClick={()=>setProductModal(true)}>
+                                     Add new product
+                                </Button>
+                                </span>
                             </div>
                             <div>
                                 <IndexFilters
