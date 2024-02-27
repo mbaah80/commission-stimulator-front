@@ -5,7 +5,6 @@ import {
     Card as LegacyCard,
     useIndexResourceState,
     Text,
-    Badge,
     TextField,
     LegacyStack,
     Collapsible,
@@ -14,28 +13,30 @@ import {
     Form,
     FormLayout,
     DatePicker,
-    AppProvider, IndexFilters, useBreakpoints
+    AppProvider, IndexFilters, useBreakpoints, RangeSlider, ChoiceList, useSetIndexFiltersMode, Badge
 } from '@shopify/polaris';
 import enTranslations from '@shopify/polaris/locales/en.json';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {baseUrl} from '../../../utils/baseUrl';
+import  Filter  from '../../components/filter/Index';
+import Modal from '../../components/modal/Index';
 
 import '../../css/modify.css'
 
 export const Index = () => {
     const [products, setProducts] = useState([]);
     const [commission, setCommission] = useState(0);
-    const [sortBy, setSortBy] = useState('name');
-    const [sortDirection, setSortDirection] = useState('ascending');
     const [staffMember, setStaffMember] = useState('');
     const [date, setDate] = useState('');
     const [open, setOpen] = useState(false);
     const [result, setResult] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [modal, setModal] = useState(false);
     const [applyCommissionAll, setApplyCommissionAll] = useState(0);
     const [filterProducts, setFilterProducts] = useState('');
+    const [queryValue, setQueryValue] = useState('');
+    const [active, setActive] = useState(false);
+
 
 
     const fetchProducts = async () => {
@@ -51,14 +52,15 @@ export const Index = () => {
         fetchProducts();
     }, []);
 
-    //filter products by  filterProducts use useMemo
-
 
     const filterProductsData = useMemo(() => {
         return products.filter((product) => {
-            return filterProducts ? product.name.toLowerCase().includes(filterProducts.toLowerCase()) : true;
+            const nameMatch = product.name.toLowerCase().includes(filterProducts.toLowerCase());
+            const categoryMatch = product.category.toLowerCase().includes(filterProducts.toLowerCase());
+            return filterProducts ? nameMatch || categoryMatch : true;
         });
     }, [filterProducts, products]);
+
 
 
     const resourceName = {
@@ -91,6 +93,9 @@ export const Index = () => {
                     setApplyCommissionAll('');
                     handleSelectionChange([]);
                     fetchProducts();
+                    setTimeout(() => {
+                        alert('Commission updated successfully')
+                    },1000)
                 })
                 .catch(error => {})
         } catch (error) {
@@ -150,9 +155,14 @@ export const Index = () => {
             })
                 .then(response => response.json())
                 .then(data => {
-                    setModal(false);
+                    setActive(false);
+                    setStaffMember('');
                     setApplyCommissionAll('');
                     handleSelectionChange([]);
+
+                    setTimeout(() => {
+                        alert('Order created successfully')
+                    },1000)
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -178,20 +188,230 @@ export const Index = () => {
 
     const handleToggle = useCallback(() => setOpen((open) => !open), []);
 
-    const rowMarkup = filterProductsData.map((product, index) => {
-        const {
-            _id,
-            name,
-            category,
-            price,
-            commissionPercentage
-        } = product;
 
-        return (
+    const handleSubmit = () => {}
+
+    //tabble headers data
+
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const [itemStrings, setItemStrings] = useState([
+        'All',
+        'Unpaid',
+        'Open',
+        'Closed',
+        'Local delivery',
+        'Local pickup',
+    ]);
+    const deleteView = (index) => {
+        const newItemStrings = [...itemStrings];
+        newItemStrings.splice(index, 1);
+        setItemStrings(newItemStrings);
+        setSelected(0);
+    };
+
+    const duplicateView = async (name) => {
+        setItemStrings([...itemStrings, name]);
+        setSelected(itemStrings.length);
+        await sleep(1);
+        return true;
+    };
+
+    const tabs = itemStrings.map((item, index) => ({
+        content: item,
+        index,
+        onAction: () => {},
+        id: `${item}-${index}`,
+        isLocked: index === 0,
+        actions:
+            index === 0
+                ? []
+                : [
+                    {
+                        type: 'rename',
+                        onAction: () => {},
+                        onPrimaryAction: async (value) => {
+                            const newItemsStrings = tabs.map((item, idx) => {
+                                if (idx === index) {
+                                    return value;
+                                }
+                                return item.content;
+                            });
+                            await sleep(1);
+                            setItemStrings(newItemsStrings);
+                            return true;
+                        },
+                    },
+                    {
+                        type: 'duplicate',
+                        onPrimaryAction: async (value) => {
+                            await sleep(1);
+                            duplicateView(value);
+                            return true;
+                        },
+                    },
+                    {
+                        type: 'edit',
+                    },
+                    {
+                        type: 'delete',
+                        onPrimaryAction: async () => {
+                            await sleep(1);
+                            deleteView(index);
+                            return true;
+                        },
+                    },
+                ],
+    }));
+    const [selected, setSelected] = useState(0);
+    const onCreateNewView = async (value) => {
+       setStaffMember(value);
+        setItemStrings([...itemStrings, value]);
+        setSelected(itemStrings.length);
+        return true;
+    };
+    const sortOptions = [
+        { label: 'name', value: 'order asc', directionLabel: 'Ascending' },
+        { label: 'name', value: 'order desc', directionLabel: 'Descending' },
+        { label: 'price', value: 'order asc', directionLabel: 'Ascending' },
+        { label: 'price', value: 'order desc', directionLabel: 'Descending' },
+        { label: 'category', value: 'order asc', directionLabel: 'Ascending' },
+        { label: 'category', value: 'order desc', directionLabel: 'Descending' },
+
+    ];
+    const [sortSelected, setSortSelected] = useState(['order asc']);
+    const { mode, setMode } = useSetIndexFiltersMode();
+    const onHandleCancel = () => {};
+
+
+    const primaryAction =
+        selected === 0
+            ? {
+                type: 'save-as',
+                onAction: onCreateNewView,
+                disabled: false,
+                loading: false,
+            }
+            : {
+                type: 'save',
+                onAction: staffOrderHandler,
+                disabled: false,
+                loading: false,
+            };
+    const [accountStatus, setAccountStatus] = useState(undefined);
+    const [moneySpent, setMoneySpent] = useState(undefined);
+    const [taggedWith, setTaggedWith] = useState('');
+
+    const handleAccountStatusChange = useCallback((value) => setAccountStatus(value), []);
+    const handleMoneySpentChange = useCallback((value) => setMoneySpent(value), []);
+    const handleTaggedWithChange = useCallback((value) => setTaggedWith(value), []);
+    const handleFiltersQueryChange = useCallback((value) => setQueryValue(value), []);
+    const handleAccountStatusRemove = useCallback(() => setAccountStatus(undefined), []);
+    const handleMoneySpentRemove = useCallback(() => setMoneySpent(undefined), []);
+    const handleTaggedWithRemove = useCallback(() => setTaggedWith(''), []);
+    const handleQueryValueRemove = useCallback(() => setQueryValue(''), []);
+    const handleFiltersClearAll = useCallback(() => {
+        handleAccountStatusRemove();
+        handleMoneySpentRemove();
+        handleTaggedWithRemove();
+        handleQueryValueRemove();
+    }, [
+        handleAccountStatusRemove,
+        handleMoneySpentRemove,
+        handleQueryValueRemove,
+        handleTaggedWithRemove,
+    ]);
+
+    const filters = [
+        {
+            key: 'accountStatus',
+            label: 'Account status',
+            filter: (
+                <ChoiceList
+                    title="Account status"
+                    titleHidden
+                    choices={[
+                        { label: 'Enabled', value: 'enabled' },
+                        { label: 'Not invited', value: 'not invited' },
+                        { label: 'Invited', value: 'invited' },
+                        { label: 'Declined', value: 'declined' },
+                    ]}
+                    selected={accountStatus || []}
+                    onChange={handleAccountStatusChange}
+                    allowMultiple
+                />
+            ),
+            shortcut: true,
+        },
+        {
+            key: 'taggedWith',
+            label: 'Tagged with',
+            filter: (
+                <TextField
+                    label="Tagged with"
+                    value={taggedWith}
+                    onChange={handleTaggedWithChange}
+                    autoComplete="off"
+                    labelHidden
+                />
+            ),
+            shortcut: true,
+        },
+        {
+            key: 'moneySpent',
+            label: 'Money spent',
+            filter: (
+                <RangeSlider
+                    label="Money spent is between"
+                    labelHidden
+                    value={moneySpent || [0, 500]}
+                    prefix="$"
+                    output
+                    min={0}
+                    max={2000}
+                    step={1}
+                    onChange={handleMoneySpentChange}
+                />
+            ),
+        },
+    ];
+
+    const appliedFilters = [];
+    if (accountStatus && !isEmpty(accountStatus)) {
+        const key = 'accountStatus';
+        appliedFilters.push({
+            key,
+            label: disambiguateLabel(key, accountStatus),
+            onRemove: handleAccountStatusRemove,
+        });
+    }
+    if (moneySpent) {
+        const key = 'moneySpent';
+        appliedFilters.push({
+            key,
+            label: disambiguateLabel(key, moneySpent),
+            onRemove: handleMoneySpentRemove,
+        });
+    }
+    if (!isEmpty(taggedWith)) {
+        const key = 'taggedWith';
+        appliedFilters.push({
+            key,
+            label: disambiguateLabel(key, taggedWith),
+            onRemove: handleTaggedWithRemove,
+        });
+    }
+
+
+
+    const rowMarkup = filterProductsData.map(
+        (
+            { id, name, price, category, commissionPercentage },
+            index
+        ) => (
             <IndexTable.Row
-                id={_id}
-                key={_id}
-                selected={selectedResources.includes(_id)}
+                id={id}
+                key={id}
+                selected={selectedResources.includes(id)}
                 position={index}
             >
                 <IndexTable.Cell>
@@ -204,36 +424,48 @@ export const Index = () => {
                     <Text as="span">{price}</Text>
                 </IndexTable.Cell>
                 <IndexTable.Cell>
-                   <div
-                         className="flex"
-                   >
+                    <div
+                        className="flex"
+                    >
                        <span className="w-5 mr-10">
                            <TextField
-                           className="width-50"
-                           placeholder="%"
-                           disabled
-                       />
+                               className="width-50"
+                               placeholder="%"
+                               disabled
+                           />
                        </span>
-                       <span
+                        <span
                             className="w-10"
-                       >
+                        >
                            <TextField
                                type="number"
                                value={commissionPercentage}
-                               onChange={(value) => handleCommissionChange(_id, value)}
+                               onChange={(value) => handleCommissionChange(id, value)}
                                autoComplete="off"
                            />
                        </span>
-                   </div>
+                    </div>
                 </IndexTable.Cell>
             </IndexTable.Row>
-        );
-    });
+        )
+    );
 
-    const handleSubmit = () => {}
+    const handleChange = useCallback(() => setActive(!active), [active]);
+
+    const activator = <Button onClick={handleChange}>Open</Button>;
+
+
+
 
     return (
         <AppProvider i18n={enTranslations}>
+          <Modal
+              active={active}
+              setActive={setActive}
+              staffOrderHandler={staffOrderHandler}
+              staffMember={staffMember}
+              setStaffMember={setStaffMember}
+          />
             <LegacyStack vertical>
                 <Button
                     onClick={handleToggle}
@@ -307,41 +539,10 @@ export const Index = () => {
                 </Collapsible>
             </LegacyStack>
             <LegacyCard>
-                <IndexFilters
-                    sortOptions={
-                        [
-                            {label: 'Commission', value: 'commission'},
-                            {label: 'Price', value: 'price'},
-                            {label: 'Name', value: 'name'},
-                            {label: 'Category', value: 'category'}
-                        ]
-                    }
-                    queryPlaceholder="Searching in all"
-                    tabs={
-                        [
-                            {
-                                id: 'all-products',
-                                content: 'All',
-                                accessibilityLabel: 'All products',
-                                filter: {
-                                    sortKey: sortBy,
-                                    sortDir: sortDirection,
-                                },
-                            },
-                        ]
-                    }
-                />
+
                 {
                     selectedResources.length > 0 && (
                         <div className="flex-end mt-10 mb-10">
-                            <span className="mr-10">
-                                <TextField
-                                    className="width-50"
-                                    placeholder="Filter by name"
-                                    value={filterProducts}
-                                    onChange={(value) => setFilterProducts(value)}
-                                />
-                            </span>
                              <span className="w-5 mr-10 ">
                                    <TextField
                                        className="width-50"
@@ -349,62 +550,102 @@ export const Index = () => {
                                        disabled
                                    />
                                </span>
-                            <TextField
-                                className="width-50"
-                                placeholder="%"
-                                value={applyCommissionAll}
-                                onChange={(value) => setApplyCommissionAll(value)}
-                            />
+                            <span  className="width-50 mr-10">
+                                <TextField
+                                    placeholder="%"
+                                    value={applyCommissionAll}
+                                    onChange={(value) => setApplyCommissionAll(value)}
+                                />
+                            </span>
+
+                            {
+                                selectedResources.length > 0 && (
+                                    <div>
+                                        <span className="mr-10">
+                                            <Button variant="secondary" onClick={handleBulkActionCommission}>
+                                            Apply to selected products
+                                        </Button>
+                                        </span>
+                                        <Button variant="secondary" onClick={()=>setActive(true)}>
+                                            Add orders to Staff Member
+                                        </Button>
+                                    </div>
+                                )
+                            }
                         </div>
                     )
                 }
-                <IndexTable
-                    condensed={useBreakpoints().smDown}
-                    resourceName={resourceName}
-                    itemCount={products.length}
-                    selectedItemsCount={
-                        allResourcesSelected ? 'All' : selectedResources.length
-                    }
-                    onSelectionChange={handleSelectionChange}
-                    headings={[
-                        {title: 'Name'},
-                        {title: 'Category'},
-                        {title: 'Price'},
-                        {title: ''},
-                    ]}
-                    pagination={{
-                        hasNext: true,
-                        product: 'products',
-                    }}
-                    sort={{
-                        value: sortBy,
-                        reverse: sortDirection === 'descending',
-                    }}
-                    onSortChange={(selectedColumnId, sortDirection) => {
-                        setSortBy(selectedColumnId);
-                        setSortDirection(sortDirection);
-                    }}
-                    sortable={['name', 'category', 'price']}
-                    bulkActions={[
-                        {
-                            content: 'Apply to selected products',
-                            onAction: () => handleBulkActionCommission(),
-                        },
-                        {
-                            content: 'Remove commission',
-                            onAction: () => console.log('Remove commission'),
-                        },
-                        {
-                            content: 'Add staff order',
-                            onAction: () => staffOrderHandler(),
-                        }
-                    ]}
-                >
-                    {rowMarkup}
-                </IndexTable>
+                {products.length > 0 ? (
+                        <div>
+                            <IndexFilters
+                                sortOptions={sortOptions}
+                                sortSelected={sortSelected}
+                                queryValue={filterProducts}
+                                queryPlaceholder="filter products by name or category"
+                                onQueryChange={setFilterProducts}
+                                onQueryClear={() => setQueryValue('')}
+                                onSort={setSortSelected}
+                                cancelAction={{
+                                    onAction: onHandleCancel,
+                                    disabled: false,
+                                    loading: false,
+                                }}
+                                tabs={tabs}
+                                selected={selected}
+                                onSelect={setSelected}
+                                canCreateNewView
+                                onCreateNewView={onCreateNewView}
+                                filters={filters}
+                                appliedFilters={appliedFilters}
+                                onClearAll={handleFiltersClearAll}
+                                mode={mode}
+                                setMode={setMode}
+                            />
+                            <IndexTable
+                                resourceName={resourceName}
+                                itemCount={filterProductsData.length}
+                                selectedItemsCount={
+                                    allResourcesSelected ? 'All' : selectedResources.length
+                                }
+                                onSelectionChange={handleSelectionChange}
+                                headings={[
+                                    {title: 'Name'},
+                                    {title: 'Category'},
+                                    {title: 'Price'},
+                                    {title: ''},
+                                ]}
+                            >
+                                {rowMarkup}
+                            </IndexTable>
+                        </div>
+                ) : (
+                    <p className="flex mt-10 mb-10">Loading products...</p>
+                )}
             </LegacyCard>
         </AppProvider>
     )
+
+    function disambiguateLabel(key, value) {
+        switch (key) {
+            case 'moneySpent':
+                return `Money spent is between $${value[0]} and $${value[1]}`;
+            case 'taggedWith':
+                return `Tagged with ${value}`;
+            case 'accountStatus':
+                return value.map((val) => `Customer ${val}`).join(', ');
+            default:
+                return value;
+        }
+    }
+
+    function isEmpty(value) {
+        if (Array.isArray(value)) {
+            return value.length === 0;
+        } else {
+            return value === '' || value == null;
+        }
+    }
+
 }
 
 export default Index;
