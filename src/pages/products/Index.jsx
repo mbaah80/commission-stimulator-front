@@ -396,7 +396,7 @@ export const Index = () => {
                         >
                             <TextField
                                 type="number"
-                                value={commissionPercentage}
+                                value={commissionPercentage || 0}
                                 onChange={(value) => handleCommissionChange(id, value)}
                                 autoComplete="off"
                             />
