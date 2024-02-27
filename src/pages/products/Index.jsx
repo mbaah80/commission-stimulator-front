@@ -564,7 +564,7 @@ export const Index = () => {
                                     selectedResources.length > 0 && (
                                         <span className="mr-10">
                                             <Button variant="secondary" onClick={()=>setActive(true)}>
-                                            stimulate
+                                            simulate
                                         </Button>
                                 </span>
                                     )
