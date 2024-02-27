@@ -36,6 +36,7 @@ export const Index = () => {
     const [filterProducts, setFilterProducts] = useState('');
     const [queryValue, setQueryValue] = useState('');
     const [active, setActive] = useState(false);
+    const [orders, setOrders] = useState([]);
 
 
 
@@ -48,8 +49,18 @@ export const Index = () => {
             console.error('Error fetching products', error);
         }
     };
+    const fetchOrders = async () => {
+        try {
+            const response = await fetch(`${baseUrl}/allOrders`);
+            const data = await response.json();
+            setOrders(data);
+        } catch (error) {
+            console.error('Error fetching products', error);
+        }
+    };
     useEffect(() => {
         fetchProducts();
+        fetchOrders();
     }, []);
 
     //function to filter products
@@ -199,30 +210,10 @@ export const Index = () => {
 
     const handleSubmit = () => {}
 
-    //tabble headers data
-
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const [itemStrings, setItemStrings] = useState([
-        'All',
-        'Unpaid',
-        'Open',
-        'Closed',
-        'Local delivery',
-        'Local pickup',
+        `Included `,
+        `Not Included`,
     ]);
-    const deleteView = (index) => {
-        const newItemStrings = [...itemStrings];
-        newItemStrings.splice(index, 1);
-        setItemStrings(newItemStrings);
-        setSelected(0);
-    };
-
-    const duplicateView = async (name) => {
-        setItemStrings([...itemStrings, name]);
-        setSelected(itemStrings.length);
-        await sleep(1);
-        return true;
-    };
 
     const tabs = itemStrings.map((item, index) => ({
         content: item,
@@ -230,45 +221,6 @@ export const Index = () => {
         onAction: () => {},
         id: `${item}-${index}`,
         isLocked: index === 0,
-        actions:
-            index === 0
-                ? []
-                : [
-                    {
-                        type: 'rename',
-                        onAction: () => {},
-                        onPrimaryAction: async (value) => {
-                            const newItemsStrings = tabs.map((item, idx) => {
-                                if (idx === index) {
-                                    return value;
-                                }
-                                return item.content;
-                            });
-                            await sleep(1);
-                            setItemStrings(newItemsStrings);
-                            return true;
-                        },
-                    },
-                    {
-                        type: 'duplicate',
-                        onPrimaryAction: async (value) => {
-                            await sleep(1);
-                            duplicateView(value);
-                            return true;
-                        },
-                    },
-                    {
-                        type: 'edit',
-                    },
-                    {
-                        type: 'delete',
-                        onPrimaryAction: async () => {
-                            await sleep(1);
-                            deleteView(index);
-                            return true;
-                        },
-                    },
-                ],
     }));
     const [selected, setSelected] = useState(0);
     const onCreateNewView = async (value) => {
@@ -278,13 +230,8 @@ export const Index = () => {
         return true;
     };
     const sortOptions = [
-        { label: 'name', value: 'order asc', directionLabel: 'Ascending' },
-        { label: 'name', value: 'order desc', directionLabel: 'Descending' },
-        { label: 'price', value: 'order asc', directionLabel: 'Ascending' },
-        { label: 'price', value: 'order desc', directionLabel: 'Descending' },
-        { label: 'category', value: 'order asc', directionLabel: 'Ascending' },
-        { label: 'category', value: 'order desc', directionLabel: 'Descending' },
-
+        { label: 'Newest update', value: 'order asc' },
+        { label: 'Oldest update', value: 'order desc' },
     ];
     const [sortSelected, setSortSelected] = useState(['order asc']);
     const { mode, setMode } = useSetIndexFiltersMode();
@@ -418,7 +365,7 @@ export const Index = () => {
                 </IndexTable.Cell>
                 <IndexTable.Cell>
                     <div
-                        className="flex"
+                        className="flex flex-end"
                     >
                        <span className="w-5 mr-10">
                            <TextField
@@ -454,21 +401,29 @@ export const Index = () => {
               setStaffMember={setStaffMember}
           />
             <LegacyStack vertical>
-                <Button
-                    onClick={handleToggle}
-                    ariaExpanded={open}
-                    ariaControls="basic-collapsible"
-                >
-                    Filter by date and staff member
-                </Button>
+                <div className="flex">
+                   <div className="mr-10">
+                        <Button
+                            onClick={handleToggle}
+                            ariaExpanded={open}
+                            ariaControls="basic-collapsible"
+                        >
+                        Filter by date and staff member
+                    </Button>
+                   </div>
+                    <Text as={"span"}>
+                        Order Total : {orders.length}
+                    </Text>
+                </div>
                 {
                     result && ( <TextContainer> <Text >
                         Total commission Base on Orders: {result.totalCommission} - {result.staffMember}
                     </Text> </TextContainer>)
                 }
                 {
-                    result && result.length > 0 && (
-                        <Text >
+                    result && result?.orders?.length > 0 && (
+                        <span
+                        >
                             Orders for {result.staffMember} From Date range
                             {
                                 result.orders.map((order, index) => {
@@ -477,12 +432,10 @@ export const Index = () => {
                                             {
                                                 order.products.map((product, index) => {
                                                     return (
-                                                        <div key={index}>
-                                                            <TextContainer>
-                                                                <Text>
-                                                                 Product   {product.name} - Price {product.price} - Commission Percentage {product.commissionPercentage} - Commission {product.commission}
-                                                                </Text>
-                                                            </TextContainer>
+                                                        <div key={product._id}>
+                                                            <Text as="span">
+                                                                Product   {product.name} - Price {product.price} - Commission Percentage {product.commissionPercentage} - Earning {product.commission}
+                                                            </Text>
                                                         </div>
                                                     )
                                                 })
@@ -491,7 +444,7 @@ export const Index = () => {
                                     )
                                 })
                         }
-                        </Text>
+                        </span>
                     )
                 }
                 <Collapsible
