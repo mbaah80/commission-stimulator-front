@@ -212,7 +212,7 @@ export const Index = () => {
     const handleSubmit = () => {}
 
     const [itemStrings, setItemStrings] = useState([
-        `Included `,
+        `Included ${selectedResources.length} `,
         `Not Included`,
     ]);
 
