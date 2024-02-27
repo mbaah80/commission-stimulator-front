@@ -560,11 +560,15 @@ export const Index = () => {
                                             Apply to selected products
                                         </Button>
                                         </span>
-                                <span className="mr-10">
-                                    <Button variant="secondary" onClick={()=>setActive(true)}>
-                                    simulate
-                                </Button>
+                                {
+                                    selectedResources.length > 0 && (
+                                        <span className="mr-10">
+                                            <Button variant="secondary" onClick={()=>setActive(true)}>
+                                            stimulate
+                                        </Button>
                                 </span>
+                                    )
+                                }
                                 <span>
                                     <Button variant="secondary" onClick={()=>setProductModal(true)}>
                                      Add new product
