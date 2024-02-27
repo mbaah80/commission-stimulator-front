@@ -52,7 +52,7 @@ export const Index = () => {
         fetchProducts();
     }, []);
 
-
+    //function to filter products
     const filterProductsData = useMemo(() => {
         return products.filter((product) => {
             const nameMatch = product.name.toLowerCase().includes(filterProducts.toLowerCase());
@@ -68,8 +68,16 @@ export const Index = () => {
         plural: 'products',
     };
 
-    const {selectedResources, allResourcesSelected, handleSelectionChange} =
-        useIndexResourceState(products);
+
+    let {
+        selectedResources,
+        allResourcesSelected,
+        handleSelectionChange,
+        clearSelection
+    } = useIndexResourceState(products,{
+        resourceName: resourceName.plural,
+
+    });
 
 
     const handleBulkActionCommission = async() => {
@@ -89,9 +97,9 @@ export const Index = () => {
             })
                 .then(response => response.json())
                 .then(data => {
-                    setModal(false);
                     setApplyCommissionAll('');
                     handleSelectionChange([]);
+                    clearSelection();
                     fetchProducts();
                     setTimeout(() => {
                         alert('Commission updated successfully')
@@ -158,7 +166,7 @@ export const Index = () => {
                     setActive(false);
                     setStaffMember('');
                     setApplyCommissionAll('');
-                    handleSelectionChange([]);
+                    clearSelection();
 
                     setTimeout(() => {
                         alert('Order created successfully')
@@ -283,20 +291,6 @@ export const Index = () => {
     const onHandleCancel = () => {};
 
 
-    const primaryAction =
-        selected === 0
-            ? {
-                type: 'save-as',
-                onAction: onCreateNewView,
-                disabled: false,
-                loading: false,
-            }
-            : {
-                type: 'save',
-                onAction: staffOrderHandler,
-                disabled: false,
-                loading: false,
-            };
     const [accountStatus, setAccountStatus] = useState(undefined);
     const [moneySpent, setMoneySpent] = useState(undefined);
     const [taggedWith, setTaggedWith] = useState('');
@@ -304,7 +298,6 @@ export const Index = () => {
     const handleAccountStatusChange = useCallback((value) => setAccountStatus(value), []);
     const handleMoneySpentChange = useCallback((value) => setMoneySpent(value), []);
     const handleTaggedWithChange = useCallback((value) => setTaggedWith(value), []);
-    const handleFiltersQueryChange = useCallback((value) => setQueryValue(value), []);
     const handleAccountStatusRemove = useCallback(() => setAccountStatus(undefined), []);
     const handleMoneySpentRemove = useCallback(() => setMoneySpent(undefined), []);
     const handleTaggedWithRemove = useCallback(() => setTaggedWith(''), []);
@@ -450,12 +443,6 @@ export const Index = () => {
         )
     );
 
-    const handleChange = useCallback(() => setActive(!active), [active]);
-
-    const activator = <Button onClick={handleChange}>Open</Button>;
-
-
-
 
     return (
         <AppProvider i18n={enTranslations}>
@@ -540,9 +527,9 @@ export const Index = () => {
             </LegacyStack>
             <LegacyCard>
 
-                {
-                    selectedResources.length > 0 && (
-                        <div className="flex-end mt-10 mb-10">
+                {products.length > 0 ? (
+                        <div>
+                            <div className="flex-end mt-10 mb-10">
                              <span className="w-5 mr-10 ">
                                    <TextField
                                        className="width-50"
@@ -550,73 +537,64 @@ export const Index = () => {
                                        disabled
                                    />
                                </span>
-                            <span  className="width-50 mr-10">
+                                <span  className="width-20 mr-10">
                                 <TextField
-                                    placeholder="%"
+                                    placeholder="set commission for products"
                                     value={applyCommissionAll}
                                     onChange={(value) => setApplyCommissionAll(value)}
                                 />
                             </span>
-
-                            {
-                                selectedResources.length > 0 && (
-                                    <div>
-                                        <span className="mr-10">
+                                <span className="mr-10">
                                             <Button variant="secondary" onClick={handleBulkActionCommission}>
                                             Apply to selected products
                                         </Button>
                                         </span>
-                                        <Button variant="secondary" onClick={()=>setActive(true)}>
-                                            Add orders to Staff Member
-                                        </Button>
-                                    </div>
-                                )
-                            }
-                        </div>
-                    )
-                }
-                {products.length > 0 ? (
-                        <div>
-                            <IndexFilters
-                                sortOptions={sortOptions}
-                                sortSelected={sortSelected}
-                                queryValue={filterProducts}
-                                queryPlaceholder="filter products by name or category"
-                                onQueryChange={setFilterProducts}
-                                onQueryClear={() => setQueryValue('')}
-                                onSort={setSortSelected}
-                                cancelAction={{
-                                    onAction: onHandleCancel,
-                                    disabled: false,
-                                    loading: false,
-                                }}
-                                tabs={tabs}
-                                selected={selected}
-                                onSelect={setSelected}
-                                canCreateNewView
-                                onCreateNewView={onCreateNewView}
-                                filters={filters}
-                                appliedFilters={appliedFilters}
-                                onClearAll={handleFiltersClearAll}
-                                mode={mode}
-                                setMode={setMode}
-                            />
-                            <IndexTable
-                                resourceName={resourceName}
-                                itemCount={filterProductsData.length}
-                                selectedItemsCount={
-                                    allResourcesSelected ? 'All' : selectedResources.length
-                                }
-                                onSelectionChange={handleSelectionChange}
-                                headings={[
-                                    {title: 'Name'},
-                                    {title: 'Category'},
-                                    {title: 'Price'},
-                                    {title: ''},
-                                ]}
-                            >
-                                {rowMarkup}
-                            </IndexTable>
+                                <Button variant="secondary" onClick={()=>setActive(true)}>
+                                    Add orders to Staff Member
+                                </Button>
+                            </div>
+                            <div>
+                                <IndexFilters
+                                    sortOptions={sortOptions}
+                                    sortSelected={sortSelected}
+                                    queryValue={filterProducts}
+                                    queryPlaceholder="filter products by name or category"
+                                    onQueryChange={setFilterProducts}
+                                    onQueryClear={() => setQueryValue('')}
+                                    onSort={setSortSelected}
+                                    cancelAction={{
+                                        onAction: onHandleCancel,
+                                        disabled: false,
+                                        loading: false,
+                                    }}
+                                    tabs={tabs}
+                                    selected={selected}
+                                    onSelect={setSelected}
+                                    canCreateNewView
+                                    onCreateNewView={onCreateNewView}
+                                    filters={filters}
+                                    appliedFilters={appliedFilters}
+                                    onClearAll={handleFiltersClearAll}
+                                    mode={mode}
+                                    setMode={setMode}
+                                />
+                                <IndexTable
+                                    resourceName={resourceName}
+                                    itemCount={filterProductsData.length}
+                                    selectedItemsCount={
+                                        allResourcesSelected ? 'All' : selectedResources.length
+                                    }
+                                    onSelectionChange={handleSelectionChange}
+                                    headings={[
+                                        {title: 'Name'},
+                                        {title: 'Category'},
+                                        {title: 'Price'},
+                                        {title: ''},
+                                    ]}
+                                >
+                                    {rowMarkup}
+                                </IndexTable>
+                            </div>
                         </div>
                 ) : (
                     <p className="flex mt-10 mb-10">Loading products...</p>
