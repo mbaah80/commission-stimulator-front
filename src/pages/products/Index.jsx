@@ -39,7 +39,6 @@ export const Index = () => {
     const [queryValue, setQueryValue] = useState('');
     const [active, setActive] = useState(false);
     const [orders, setOrders] = useState([]);
-    const [commissionPercentage, setCommissionPercentage] = useState('');
 
 
 
@@ -85,7 +84,6 @@ export const Index = () => {
 
     let {
         selectedResources,
-        allResourcesSelected,
         handleSelectionChange,
         clearSelection
     } = useIndexResourceState(products,{
@@ -318,15 +316,6 @@ export const Index = () => {
         },
     ];
 
-    const appliedFilters = [];
-    if (moneySpent) {
-        const key = 'moneySpent';
-        appliedFilters.push({
-            key,
-            label: disambiguateLabel(key, moneySpent),
-            onRemove: handleMoneySpentRemove,
-        });
-    }
 
     const rowMarkup = filterProductsData.map(
         (
@@ -486,7 +475,7 @@ export const Index = () => {
                                         </Button>
                                         </span>
                                 <Button variant="secondary" onClick={()=>setActive(true)}>
-                                    Add orders to Staff Member
+                                    simulate
                                 </Button>
                             </div>
                             <div>

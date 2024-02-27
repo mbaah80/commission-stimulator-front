@@ -3,13 +3,13 @@ import {useState, useCallback} from 'react';
 
 export const  Index = ({active,setActive, staffMember, setStaffMember, staffOrderHandler }) => {
 
-
+   const closedModal = useCallback(() => setActive(false), [setActive]);
 
     return (
         <div>
             <Modal
                 open={active}
-                onClose={setActive}
+                onClose={closedModal}
                 title="staff Member"
                 primaryAction={{
                     content: 'Save Order',
@@ -18,7 +18,7 @@ export const  Index = ({active,setActive, staffMember, setStaffMember, staffOrde
             >
                 <Modal.Section>
                     <TextField
-                        label="Stff name"
+                        label="Staff name"
                                value={staffMember}
                                  onChange={(value) => setStaffMember(value)}
                      autoComplete="off"
