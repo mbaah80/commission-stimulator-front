@@ -417,50 +417,48 @@ export const Index = () => {
               actionHandler={staffOrderHandler}
               staffMember={staffMember}
               setStaffMember={setStaffMember}
-              children={
-                  <TextField
-                      label="Staff name"
-                      value={staffMember}
-                      onChange={(value) => setStaffMember(value)}
-                      autoComplete="off"
-                  />
-              }
-          />
+          >
+              <TextField
+                  label="Staff name"
+                  value={staffMember}
+                  onChange={(value) => setStaffMember(value)}
+                  autoComplete="off"
+              />
+          </Modal>
             <Modal
                 title="Add Product"
                 content="Save Product"
                 active={productModal}
                 setActive={setProductModal}
                 actionHandler={addProductHandler}
-                children={
-                    <div>
-                        <div className="mb-10">
-                            <TextField
-                                label="Product name"
-                                value={name}
-                                onChange={(value) => setName(value)}
-                                autoComplete="off"
-                            />
-                        </div>
-                        <div className="mb-10">
-                            <TextField
-                                label="category"
-                                value={category}
-                                onChange={(value) => setCategory(value)}
-                                autoComplete="off"
-                            />
-                        </div>
-                        <div className="mb-10">
-                            <TextField
-                                label="price"
-                                value={price}
-                                onChange={(value) => setPrice(value)}
-                                autoComplete="off"
-                            />
-                        </div>
+            >
+                <div>
+                    <div className="mb-10">
+                        <TextField
+                            label="Product name"
+                            value={name}
+                            onChange={(value) => setName(value)}
+                            autoComplete="off"
+                        />
                     </div>
-                }
-            />
+                    <div className="mb-10">
+                        <TextField
+                            label="category"
+                            value={category}
+                            onChange={(value) => setCategory(value)}
+                            autoComplete="off"
+                        />
+                    </div>
+                    <div className="mb-10">
+                        <TextField
+                            label="price"
+                            value={price}
+                            onChange={(value) => setPrice(value)}
+                            autoComplete="off"
+                        />
+                    </div>
+                </div>
+            </Modal>
             <LegacyStack vertical>
                 <div className="flex">
                    <div className="mr-10">
